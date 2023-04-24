@@ -32,19 +32,19 @@ pages = {
 page_content = {
     "Home Page": {
         "title": "Welcome to the Pubs Finder",
-        "subtitle": "Basic Information and Statistics about the dataset:",
         "content": [
             f"Number of Pubs: {len(df)}",
             f"Number of Unique Postcodes: {len(df['postcode'].unique())}",
-            f"Top 5 Local Authorities with most Pubs:\n{df['local_authority'].value_counts().head()}",
-            f"Map of all Pubs in the UK:"
-        ]
+            f"Top 5 Local Authorities with most Pubs:\n{df['local_authority'].value_counts().head()}"
+            ],
+        "map": df[["latitude", "longitude"]]
     },
     "Pub Locations": {
         "title": "Find Pubs by Postal Code or Local Authority",
         "subtitle": "Enter the Postal Code or Local Authority to display all the pubs in the area:",
         "content": []
     },
+
     "Find the nearest Pub": {
         "title": "Find the nearest Pubs",
         "subtitle": "Enter your Latitude and Longitude to display the nearest 5 pubs on the map:",
@@ -55,18 +55,24 @@ page_content = {
 # Display the selected page
 selected_page = st.sidebar.selectbox("Select a Page", list(pages.keys()))
 pages[selected_page].title(page_content[selected_page]["title"])
-pages[selected_page].markdown(page_content[selected_page]["subtitle"])
 
 # Home Page
 if selected_page == "Home Page":
-    st.write(page_content[selected_page]["content"][-1])
+    st.header(page_content[selected_page]["title"])
+    for item in page_content[selected_page]["content"]:
+        st.write(item)
     st.map(df[["latitude", "longitude"]])
-    st.write("Note: Map may take a while to load all the pubs.")
-    
+    st.write("Note: Map may take a while to load all the pubs.")  
+
 # Pub Locations
 elif selected_page == "Pub Locations":
-    keyword = pages[selected_page].text_input("Enter Postal Code or Local Authority:")
-    filtered_df = filter_pubs(df, "postcode", keyword)
+    location_type = pages[selected_page].selectbox("Select Location Type", ["Postal Code", "Local Authority"])
+    if location_type == "Postal Code":
+        keyword = pages[selected_page].selectbox("Enter Postal Code", df["postcode"].unique())
+        filtered_df = filter_pubs(df, "postcode", keyword)
+    else:
+        keyword = pages[selected_page].selectbox("Enter Local Authority", df["local_authority"].unique())
+        filtered_df = filter_pubs(df, "local_authority", keyword)
     if len(filtered_df) == 0:
         st.write(f"No pubs found for {keyword}")
     else:
