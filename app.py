@@ -22,6 +22,11 @@ def find_nearest_pubs(df, user_lat, user_lon, n):
     nearest_pubs = df.sort_values(by="distance").head(n)
     return nearest_pubs
 
+# Define function to display a folium map in Streamlit
+def folium_map_to_html(m):
+    folium_static(m, width=800, height=500)
+    return None
+
 # Define the pages
 pages = {
     "Home Page": st.sidebar,
@@ -89,22 +94,29 @@ elif selected_page == "Pub Locations":
 elif selected_page == "Find the nearest Pub":
     user_lat = st.number_input("Enter your Latitude:", min_value=-90.0, max_value=90.0, value=0.0)
     user_lon = st.number_input("Enter your Longitude:", min_value=-180.0, max_value=180.0, value=0.0)
-    
+    max_distance = st.number_input("Enter the maximum distance to search for pubs (in km):", min_value=0.0, value=5.0)
+
     # create a new dataframe with only the necessary columns
     pubs_df = df[['name', 'latitude', 'longitude']]
-    
+
     # calculate the Euclidean distance between the user's location and each pub location
     dist = cdist([[user_lat, user_lon]], pubs_df[['latitude', 'longitude']])
     pubs_df['distance'] = dist[0]
-    
-    # sort the dataframe by the distance in ascending order
-    pubs_df = pubs_df.sort_values(by=['distance'], ascending=True)
-    
-    # display the nearest 5 pubs on the map
-    map = folium.Map(location=[user_lat, user_lon], zoom_start=12)
-    for lat, lon, name in zip(pubs_df['latitude'][:5], pubs_df['longitude'][:5], pubs_df['name'][:5]):
-        folium.Marker(location=[lat, lon], tooltip=name).add_to(map)
-    st.markdown(folium_static(map))
+
+    # select the nearest pubs within the maximum distance
+    nearest_pubs = pubs_df[pubs_df['distance'] <= max_distance].sort_values(by=['distance'])
+
+    # Create a folium map centered on the user's location
+    map = folium.Map(location=[user_lat, user_lon], zoom_start=12, tiles='cartodbpositron', attr='Map tiles by Carto, under CC BY 3.0. Data by OpenStreetMap, under ODbL.')
+
+    # Add markers for the nearest pubs to the map
+    for pub in nearest_pubs.itertuples():
+        folium.Marker(location=[pub.latitude, pub.longitude], tooltip=pub.name).add_to(map)
+
+    # Render the map using Streamlit
+    st.markdown(f"### Nearest Pubs to ({user_lat:.3f}, {user_lon:.3f})")
+    st.markdown(f"Showing the {len(nearest_pubs)} nearest pubs within {max_distance:.2f} km radius")
+    st.markdown(folium_map_to_html(map), unsafe_allow_html=True)
 
 
 
