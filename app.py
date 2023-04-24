@@ -3,6 +3,7 @@ import pandas as pd
 from geopy.distance import distance
 import folium
 from streamlit_folium import folium_static
+from scipy.spatial.distance import cdist
 
 # Load the dataset
 df = pd.read_csv("Data\data.csv")
@@ -93,7 +94,6 @@ elif selected_page == "Find the nearest Pub":
     pubs_df = df[['name', 'latitude', 'longitude']]
     
     # calculate the Euclidean distance between the user's location and each pub location
-    from scipy.spatial.distance import cdist
     dist = cdist([[user_lat, user_lon]], pubs_df[['latitude', 'longitude']])
     pubs_df['distance'] = dist[0]
     
@@ -101,7 +101,6 @@ elif selected_page == "Find the nearest Pub":
     pubs_df = pubs_df.sort_values(by=['distance'], ascending=True)
     
     # display the nearest 5 pubs on the map
-    import folium
     map = folium.Map(location=[user_lat, user_lon], zoom_start=12)
     for lat, lon, name in zip(pubs_df['latitude'][:5], pubs_df['longitude'][:5], pubs_df['name'][:5]):
         folium.Marker(location=[lat, lon], tooltip=name).add_to(map)
