@@ -5,7 +5,7 @@ import folium
 from streamlit_folium import folium_static
 
 # Load the dataset
-df = pd.read_csv("..\Data\\data.csv")
+df = pd.read_csv("Data\data.csv")
 
 # Define function to calculate Euclidean distance
 def euclidean_distance(lat1, lon1, lat2, lon2):
